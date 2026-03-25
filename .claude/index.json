@@ -1,0 +1,107 @@
+{
+  "timestamp": "2026-03-25T21:27:44.000Z",
+  "project": {
+    "name": "FastEvent 技能仓库",
+    "type": "documentation",
+    "description": "FastEvent 事件发射器库使用指南与参考文档集合"
+  },
+  "modules": [
+    {
+      "name": "fastevent",
+      "path": "skills/fastevent",
+      "type": "skill-documentation",
+      "description": "FastEvent 事件发射器库使用指南",
+      "entry": "skills/fastevent/SKILL.md",
+      "documentation": "skills/fastevent/CLAUDE.md",
+      "files": [
+        "skills/fastevent/SKILL.md",
+        "skills/fastevent/CLAUDE.md",
+        "skills/fastevent/references/advanced-patterns.md",
+        "skills/fastevent/references/executors.md",
+        "skills/fastevent/references/pipes.md",
+        "skills/fastevent/references/testing.md"
+      ],
+      "topics": [
+        "事件驱动架构",
+        "层级事件",
+        "通配符匹配",
+        "执行器策略",
+        "管道处理",
+        "TypeScript 类型安全",
+        "测试策略"
+      ]
+    }
+  ],
+  "scan_summary": {
+    "total_files": 6,
+    "scanned_files": 6,
+    "coverage_percentage": 100,
+    "languages": {
+      "markdown": 6
+    },
+    "ignore_patterns": [
+      ".git/**",
+      "node_modules/**",
+      "dist/**",
+      "build/**",
+      ".next/**",
+      "__pycache__/**",
+      "*.lock",
+      "*.log",
+      "*.bin",
+      "*.pdf",
+      "*.png",
+      "*.jpg",
+      "*.jpeg",
+      "*.gif",
+      "*.mp4",
+      "*.zip",
+      "*.tar",
+      "*.gz"
+    ],
+    "ignored_stats": {
+      "total_ignored": 24,
+      "by_reason": {
+        ".git": 24
+      }
+    }
+  },
+  "gaps": [],
+  "truncated": false,
+  "next_steps": [
+    "如果需要扫描核心代码库，请访问 packages/native/ 仓库",
+    "可以补充更多实际使用案例和最佳实践文档",
+    "可以添加性能优化相关的文档"
+  ],
+  "structure": {
+    "root": {
+      "path": "E:\\Work\\Code\\skills",
+      "documentation": "CLAUDE.md",
+      "index": ".claude/index.json",
+      "modules": [
+        {
+          "name": "skills",
+          "type": "directory",
+          "children": [
+            {
+              "name": "fastevent",
+              "type": "skill-module",
+              "documentation": "skills/fastevent/CLAUDE.md",
+              "entry": "skills/fastevent/SKILL.md",
+              "references": "skills/fastevent/references/"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "metadata": {
+    "scan_strategy": "adaptive_lightweight",
+    "phases_completed": [
+      "A: 全仓清点（轻量）",
+      "B: 文档扫描与结构分析"
+    ],
+    "phase_c_triggered": false,
+    "reason_for_phase_c": "项目为文档型仓库，已完整扫描所有 Markdown 文档，无需深度补捞"
+  }
+}

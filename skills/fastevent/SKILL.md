@@ -100,8 +100,10 @@ const userScope = events.scope("user");
 
 // 保留事件
 events.emit("config/theme", { dark: true }, { retain: true });
+// 等待某个事件的触发
+await events.waitFor("login");
 
-// 清除监听器
+// 清除所有监听器
 events.offAll();
 ```
 
@@ -111,4 +113,5 @@ events.offAll();
 - `references/executors.md` - 执行器详解
 - `references/pipes.md` - 管道详解
 - `references/testing.md` - 测试指南
-- `references/transform.md` - 对监听器接收到的事件消息进行转换，让监听器接收到自定义格式的消息
+- `references/transform.md` - 对监听器接收到的事件消息进行转换
+- `references/index.d.ts` - 类型参考

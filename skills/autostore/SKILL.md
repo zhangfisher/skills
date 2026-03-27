@@ -250,6 +250,26 @@ const store = new AutoStore({
 // 自动注册到全局ConfigManager
 ```
 
+### RefStore - 跨 Store 状态引用
+
+计算属性依赖其他 Store 的状态：
+
+```typescript
+const refStore = new AutoStore({
+  user: { name: 'Alice', age: 25 }
+}, { id: 'ref' });
+
+const mainStore = new AutoStore({
+  userName: computed((scope, { ref }) => {
+    return ref('user.name');
+  })
+}, {
+  refStore: refStore  // 配置引用
+});
+
+// refStore 变化时，mainStore 自动更新
+```
+
 ### 调试工具
 
 ```typescript
@@ -266,6 +286,7 @@ const store = createStore({...}, {
 - **计算属性优先**：优先使用计算属性而非监听器
 - **watch 动态依赖**：使用 watch 处理动态依赖场景，computed 处理静态依赖
 - **配置系统**：使用 configurable 声明可配置项，自动注册到 ConfigManager
+- **RefStore**：需要跨 Store 引用状态时使用 refStore 配置和 ref 函数
 - **影子 Store**：需要基于原 Store 计算时使用 shadow 创建影子 Store
 - **表单验证**：支持 HTML5 标准验证和自定义验证函数
 - **依赖声明**：异步计算必须显式声明依赖路径

@@ -368,6 +368,145 @@ AutoStoreConfigManager.watch("shop.discount", ({ value }) => {
 configManager.reset();
 ```
 
+### RefStore - 跨 Store 状态引用
+
+RefStore 提供一种机制，让计算属性可以依赖其他 AutoStore 实例的状态：
+
+```typescript
+import { AutoStore, computed } from "autostore";
+
+// 创建引用的 Store
+const refStore = new AutoStore(
+  {
+    user: {
+      name: "Alice",
+      age: 25,
+    },
+  },
+  { id: "refStore" }
+);
+
+// 创建主 Store，并配置 refStore
+const mainStore = new AutoStore(
+  {
+    // 在计算属性中使用 ref 函数访问 refStore
+    userName: computed((scope, { ref }) => {
+      const name = ref("user.name");
+      return `User: ${name}`;
+    }),
+    userAge: computed((scope, { ref }) => {
+      return ref("user.age");
+    }),
+  },
+  {
+    // 配置引用的 Store
+    refStore: refStore,
+    id: "main",
+  }
+);
+
+console.log(mainStore.state.userName); // "User: Alice"
+
+// 修改 refStore
+refStore.state.user.name = "Bob";
+
+// mainStore 的计算属性自动更新
+console.log(mainStore.state.userName); // "User: Bob"
+```
+
+**配置方式**：
+
+1. **全局 RefStore** - 在创建 AutoStore 时配置
+
+```typescript
+const mainStore = new AutoStore(
+  {
+    userName: computed((scope, { ref }) => {
+      return ref("user.name");
+    }),
+  },
+  {
+    refStore: refStore, // 全局配置
+  }
+);
+```
+
+2. **局部 RefStore** - 在创建计算属性时配置（优先级更高）
+
+```typescript
+const mainStore = new AutoStore(
+  {
+    userName: computed(
+      (scope, { ref }) => {
+        return ref("user.name");
+      },
+      {
+        refStore: refStore2, // 局部配置，优先于全局配置
+      }
+    ),
+  },
+  {
+    refStore: refStore1, // 全局配置
+  }
+);
+```
+
+**ref 函数签名**：
+
+```typescript
+function ref<Value = any>(
+  path?: string | string[], // 引用 refStore 的路径
+  options?: {
+    reactive?: boolean; // 状态变化时是否自动重新计算
+    runArgs?: Record<string, any>; // 传递给 run 方法的参数
+  }
+);
+```
+
+**使用场景**：
+
+- 配置元数据引用所在 Store 的状态值
+- 多 Store 之间的状态依赖
+- 跨 Store 的计算属性联动
+
+**与配置系统配合使用**：
+
+```typescript
+import { configurable, computed } from "autostore";
+
+const mainStore = new AutoStore(
+  {
+    hasAddress: false,
+    address: configurable("", {
+      label: "地址",
+      // 配置元数据中引用 mainStore 的状态
+      required: computed((_scope, { ref }) => {
+        return ref("hasAddress") === true;
+      }),
+    }),
+    city: configurable("", {
+      label: "城市",
+      required: computed((_scope, { ref }) => {
+        const hasAddress = ref("hasAddress");
+        const city = ref("city");
+        // 有地址且已填写城市时才必填
+        return hasAddress && city !== "";
+      }),
+    }),
+  },
+  {
+    // 配置系统需要引用自己时，不需要配置 refStore
+    id: "form",
+  }
+);
+```
+
+**支持范围**：
+
+- ✅ `computed` - 同步计算属性
+- ✅ `asyncComputed` - 异步计算属性
+- ✅ `watch` - 状态内监视
+
 ## Store 方法
 
 ### watch()
@@ -388,13 +527,26 @@ interface Change {
 }
 ```
 
-### unwatch()
+### 取消监听
 
-取消监听：
+`store.watch()` 返回 `FastEventSubscriber`，使用 `off()` 方法取消监听：
 
 ```typescript
-const unwatch = store.watch("count", handler);
-unwatch(); // 取消监听
+const subscriber = store.watch("count", ({ value, oldValue }) => {
+  console.log(`count 从 ${oldValue} 变为 ${value}`);
+});
+
+// 取消监听
+subscriber.off();
+```
+
+**通配符监听取消**：
+
+```typescript
+const subscriber = store.watch("user.*", handler);
+
+// 取消所有匹配的监听
+subscriber.off();
 ```
 
 ### batch()
@@ -408,6 +560,8 @@ store.batch(() => {
 ```
 
 ### sync()
+
+需要安装`@autostorejs/syncer`包支持才有 `sync`方法
 
 同步到其他 Store：
 

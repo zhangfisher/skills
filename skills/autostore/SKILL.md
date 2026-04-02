@@ -229,7 +229,7 @@ store.batch(() => {
 
 ```typescript
 const shadowStore = store.shadow({
-  orderTotal: (scope) => scope.order.price * scope.order.count
+  orderTotal: (scope) => scope.order.price * scope.order.count,
 });
 // 原Store变化时，shadowStore自动更新
 ```
@@ -239,15 +239,24 @@ const shadowStore = store.shadow({
 集中管理应用配置项：
 
 ```typescript
-import { configurable } from 'autostore';
+import { configurable } from "autostore";
 
-const store = new AutoStore({
-  discount: configurable(0.9, {
-    label: '折扣',
-    validate: (v) => v >= 0 && v <= 1
-  })
-}, { id: 'shop' });
+const store = new AutoStore(
+  {
+    discount: configurable(0.9, {
+      label: "折扣",
+      validate: (v) => v >= 0 && v <= 1,
+    }),
+  },
+  { id: "shop" }
+);
 // 自动注册到全局ConfigManager
+// 提取推断可配置状态类型
+type StoreConfigurableState = ConfigurableState<typeof store, "shop">;
+// 扩展AutoStoreConfigures类型
+declare module "autostore" {
+  interface AutoStoreConfigures extends StoreConfigurableState {}
+}
 ```
 
 ### RefStore - 跨 Store 状态引用
@@ -255,19 +264,74 @@ const store = new AutoStore({
 计算属性依赖其他 Store 的状态：
 
 ```typescript
-const refStore = new AutoStore({
-  user: { name: 'Alice', age: 25 }
-}, { id: 'ref' });
+const refStore = new AutoStore(
+  {
+    user: { name: "Alice", age: 25 },
+  },
+  { id: "ref" }
+);
 
-const mainStore = new AutoStore({
-  userName: computed((scope, { ref }) => {
-    return ref('user.name');
-  })
-}, {
-  refStore: refStore  // 配置引用
-});
+const mainStore = new AutoStore(
+  {
+    userName: computed((scope, { ref }) => {
+      return ref("user.name");
+    }),
+  },
+  {
+    refStore: refStore, // 配置引用
+  }
+);
 
 // refStore 变化时，mainStore 自动更新
+```
+
+`refStore`参数还可以指定多个`refStore`实例,然后在 `ref` 通过`ref()`
+
+```ts {22,26,30-32}
+const accountStore = new AutoStore({
+            user: {
+                name: "Alice",
+                age: 25,
+            },
+        },
+        { id: "account" },
+    );
+    const orderStore = new AutoStore(
+        {
+            order: {
+                price: 100,
+                count: 1,
+            },
+        },
+        { id: "shop" },
+    );
+
+    const mainStore = new AutoStore(
+        {
+            userName: computed((scope, { ref }) => {
+                const name = ref("@account/user.name");
+                return `User: ${name}`;
+            }),
+            total: computed((scope, { ref }) => {
+                return ref("@shop/order.price") * ref("@shop/order.count");
+            }),
+        },
+        {
+            refStore: [
+                accountStore, orderStore // 引用多个Store
+            ],
+        id: "main" },
+    );
+
+    expect(mainStore.state.userName).toBe("User: Alice");
+    accountStore.state.user.name = "Bob";
+    expect(mainStore.state.userName).toBe("User: Bob");
+    //
+    expect(mainStore.state.total).toBe(100);
+    orderStore.state.order.price = 200;
+    orderStore.state.order.count = 2;
+    expect(mainStore.state.total).toBe(400);
+});
 ```
 
 ### 调试工具
